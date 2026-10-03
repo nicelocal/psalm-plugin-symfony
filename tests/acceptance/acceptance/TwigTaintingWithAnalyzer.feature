@@ -100,6 +100,7 @@ Feature: Twig tainting with analyzer
     And I see no errors
 
   Scenario: A tainted parameter is a branch of what is displayed with the raw filter
+  Scenario: A tainted parameter goes through a filter whose PHP callable returns a number
     Given I have the following code
       """
       $untrusted = $_GET['untrusted'];
@@ -109,6 +110,22 @@ Feature: Twig tainting with analyzer
       """
       <h1>
         {{ (untrusted ? untrusted : 'none')|raw }}
+        {{ untrusted|length|raw }}
+      </h1>
+      """
+    When I run Psalm with taint analysis
+    And I see no errors
+
+  Scenario: A tainted parameter goes through a filter whose PHP callable returns what it is given, and is displayed with the raw filter
+    Given I have the following code
+      """
+      $untrusted = $_GET['untrusted'];
+      echo twig()->render('index.html.twig', ['untrusted' => $untrusted]);
+      """
+    And I have the following "index.html.twig" template
+      """
+      <h1>
+        {{ untrusted|upper|raw }}
       </h1>
       """
     When I run Psalm with taint analysis
